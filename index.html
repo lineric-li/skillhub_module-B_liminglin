@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillHub — Soul × 技能包专区</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'], mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] } } }
+    }
+  </script>
+  <style>
+    body {
+      background: #f9fafb;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hero-blur::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 600px;
+      background: radial-gradient(circle at 20% 20%, rgba(255, 220, 180, .35) 0%, transparent 50%), radial-gradient(circle at 80% 30%, rgba(180, 210, 255, .35) 0%, transparent 50%), radial-gradient(circle at 50% 50%, rgba(220, 210, 255, .3) 0%, transparent 50%);
+      filter: blur(60px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, .85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    [x-cloak] {
+      display: none !important
+    }
+
+    .tab-btn {
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: all .2s;
+    }
+
+    .tab-active {
+      background: #111;
+      color: #fff;
+    }
+
+    .tab-idle {
+      background: #fff;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+
+    .tab-idle:hover {
+      background: #f9fafb;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #f0f0f0;
+      transition: all .2s;
+    }
+
+    .card:hover {
+      border-color: #60a5fa;
+      box-shadow: 0 0 15px rgba(96, 165, 250, .4), 0 4px 20px rgba(0, 0, 0, .06);
+      transform: translateY(-4px) scale(1.01);
+      z-index: 10;
+    }
+
+    .badge-official {
+      background: #fef9c3;
+      color: #854d0e;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .badge-pro {
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .skill-tag {
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .terminal-line {
+      animation: fadein .3s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadein {
+      to {
+        opacity: 1
+      }
+    }
+
+    .sandbox-user {
+      color: #60a5fa;
+    }
+
+    .sandbox-agent {
+      color: #4ade80;
+    }
+
+    .sandbox-sys {
+      color: #a78bfa;
+    }
+
+    .sandbox-tool {
+      color: #fb923c;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      cursor: pointer;
+    }
+
+    .metric {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body class="hero-blur" x-data="app()">
+
+  <!-- HEADER -->
+  <header class="fixed top-0 w-full z-50 glass border-b border-gray-200/60">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <a href="#" class="flex items-center">
+          <img src="logo.png" alt="SkillHub" class="h-8 object-contain" />
+        </a>
+        <nav class="hidden md:flex items-center gap-6 text-sm text-gray-500 font-medium">
+          <a href="#" class="hover:text-black">热榜</a>
+          <a href="#" class="hover:text-black">全部 Skills</a>
+          <a href="#" class="text-black flex items-center gap-1 font-semibold">
+            Soul × 技能包专区
+            <span class="bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">NEW</span>
+          </a>
+          <a href="#" class="hover:text-black">AI 搭子</a>
+          <a href="#" class="hover:text-black">关于</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="relative hidden lg:block">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+          <input type="text" placeholder="搜索 skill、角色、场景…"
+            class="pl-9 pr-4 py-1.5 bg-gray-100 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-100 w-60" />
+        </div>
+        <button
+          class="flex items-center gap-1.5 bg-gray-900 text-white px-4 py-1.5 rounded-full text-sm font-medium hover:bg-gray-700 transition-colors">
+          <i data-lucide="sparkles" class="w-4 h-4"></i> 发布技能包
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="relative z-10 pt-28 pb-24 max-w-7xl mx-auto px-6">
+
+    <!-- HERO -->
+    <section class="text-center mb-14">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs text-gray-600 border border-gray-200 shadow-sm mb-6">
+        <i data-lucide="layers" class="w-3 h-3 text-purple-500"></i>
+        Soul × 技能包专区 — AI Agent 协同能力的一站式分发枢纽
+      </div>
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4">
+        从 API 工具黄页，到<br>
+        <span class="text-blue-600">一键插拔的数字化员工中心</span> 🚀
+      </h1>
+      <p class="text-gray-500 text-lg max-w-3xl mx-auto mb-8">
+        Soulcraft 专家库：精选 Soul 人格模板 × 深度绑定技能工具包，即插即用解决复杂业务。
+        <br><span class="text-sm text-gray-400">准入审核 · 动态沙箱防注入 · 熔断清退，保障生态健康。</span>
+      </p>
+    </section>
+
+    <!-- ===== SCENE A: DISCOVER ===== -->
+    <div x-show="currentView==='list'" x-cloak>
+
+      <!-- AI Recommendation Section -->
+      <div class="mb-10 max-w-4xl mx-auto">
+        <div class="flex items-center gap-3">
+          <div class="relative flex-1 group">
+            <!-- AI Glow effect behind the input -->
+            <div
+              class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur opacity-0 group-focus-within:opacity-30 transition duration-500">
+            </div>
+
+            <div
+              class="relative flex items-center bg-white border border-gray-200 group-focus-within:border-transparent rounded-full shadow-sm transition-all">
+              <!-- AI Icon -->
+              <div class="pl-4 pr-2 flex items-center justify-center">
+                <div
+                  class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100/50 flex items-center justify-center">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
+                </div>
+              </div>
+
+              <!-- Input -->
+              <input type="text" placeholder="用自然语言描述业务需求，让 AI 智能匹配..."
+                class="w-full bg-transparent py-3 pr-2 text-sm outline-none placeholder-gray-400 text-gray-700" />
+
+              <!-- Right Actions -->
+              <div class="pr-2 flex items-center">
+                <!-- AI Submit/Enter Button -->
+                <button
+                  class="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors mr-2 shadow-sm shadow-blue-500/30">
+                  <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Divider -->
+                <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+                <!-- Filter Button -->
+                <button @click="showFilters = !showFilters"
+                  class="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-gray-100 font-medium whitespace-nowrap">
+                  <i data-lucide="list-filter" class="w-3.5 h-3.5"></i> <span x-text="showFilters ? '收起' : '筛选'"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <button
+            class="shrink-0 bg-[#1c1c1e] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-black transition-colors flex items-center gap-2 shadow-sm">
+            <div class="flex flex-col gap-[2px] items-center justify-center mr-0.5">
+              <div
+                class="w-0 h-0 border-l-[3.5px] border-l-transparent border-r-[3.5px] border-r-transparent border-b-[6px] border-b-[#ffd166]">
+              </div>
+              <div class="flex gap-[2px]">
+                <div class="w-2 h-2 rounded-full bg-[#4cc9f0]"></div>
+                <div class="w-2 h-2 rounded-[2px] bg-[#06d6a0]"></div>
+              </div>
+            </div>
+            探索全部技能包
+          </button>
+        </div>
+
+        <!-- Collapsible Filters -->
+        <div x-show="showFilters" x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+          x-transition:leave-end="opacity-0 -translate-y-2"
+          class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mt-3 flex flex-col gap-3 text-xs"
+          style="display: none;">
+          <div class="flex items-start gap-4">
+            <span class="text-gray-400 font-medium w-16 shrink-0 pt-1.5">业务场景</span>
+            <div class="flex flex-wrap gap-2">
+              <button @click="activeFilters.scenario=''"
+                :class="!activeFilters.scenario?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">全部</button>
+              <button @click="activeFilters.scenario='数据分析'"
+                :class="activeFilters.scenario==='数据分析'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">数据分析</button>
+              <button @click="activeFilters.scenario='客户服务'"
+                :class="activeFilters.scenario==='客户服务'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">客户服务</button>
+              <button @click="activeFilters.scenario='软件研发'"
+                :class="activeFilters.scenario==='软件研发'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">软件研发</button>
+              <button @click="activeFilters.scenario='内容营销'"
+                :class="activeFilters.scenario==='内容营销'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">内容营销</button>
+              <button @click="activeFilters.scenario='企业合规'"
+                :class="activeFilters.scenario==='企业合规'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">企业合规</button>
+              <button @click="activeFilters.scenario='自动化测试'"
+                :class="activeFilters.scenario==='自动化测试'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">自动化测试</button>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <span class="text-gray-400 font-medium w-16 shrink-0 pt-1.5">工作内容</span>
+            <div class="flex flex-wrap gap-2">
+              <button @click="activeFilters.task=''"
+                :class="!activeFilters.task?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">全部</button>
+              <button @click="activeFilters.task='代码审查'"
+                :class="activeFilters.task==='代码审查'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">代码审查</button>
+              <button @click="activeFilters.task='架构设计'"
+                :class="activeFilters.task==='架构设计'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">架构设计</button>
+              <button @click="activeFilters.task='文案撰写'"
+                :class="activeFilters.task==='文案撰写'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">文案撰写</button>
+              <button @click="activeFilters.task='数据清洗'"
+                :class="activeFilters.task==='数据清洗'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">数据清洗</button>
+              <button @click="activeFilters.task='安全扫描'"
+                :class="activeFilters.task==='安全扫描'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">安全扫描</button>
+              <button @click="activeFilters.task='招聘初筛'"
+                :class="activeFilters.task==='招聘初筛'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">招聘初筛</button>
+              <button @click="activeFilters.task='需求拆解'"
+                :class="activeFilters.task==='需求拆解'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">需求拆解</button>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <span class="text-gray-400 font-medium w-16 shrink-0 pt-1.5">身份角色</span>
+            <div class="flex flex-wrap gap-2">
+              <button @click="activeFilters.role=''"
+                :class="!activeFilters.role?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">全部</button>
+              <button @click="activeFilters.role='开发者'"
+                :class="activeFilters.role==='开发者'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">开发者</button>
+              <button @click="activeFilters.role='运营人员'"
+                :class="activeFilters.role==='运营人员'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">运营人员</button>
+              <button @click="activeFilters.role='产品经理'"
+                :class="activeFilters.role==='产品经理'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">产品经理</button>
+              <button @click="activeFilters.role='测试工程师'"
+                :class="activeFilters.role==='测试工程师'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">测试工程师</button>
+              <button @click="activeFilters.role='法务顾问'"
+                :class="activeFilters.role==='法务顾问'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">法务顾问</button>
+              <button @click="activeFilters.role='HR/人事'"
+                :class="activeFilters.role==='HR/人事'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">HR/人事</button>
+              <button @click="activeFilters.role='研究员'"
+                :class="activeFilters.role==='研究员'?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">研究员</button>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <span class="text-gray-400 font-medium w-16 shrink-0 pt-1.5">包类型</span>
+            <div class="flex flex-wrap gap-2">
+              <button @click="activeFilters.type=''"
+                :class="!activeFilters.type?'bg-blue-50 text-blue-600 font-medium border-blue-200':'bg-gray-50 text-gray-600 hover:bg-gray-200 border-transparent'"
+                class="px-3 py-1.5 rounded-md border transition-colors">全部</button>
+              <button @click="activeFilters.type='official'"
+                :class="activeFilters.type==='official'?'bg-[#fef08a] text-[#854d0e] font-medium border-[#fef08a]':'bg-[#fef9c3] text-[#854d0e] hover:bg-[#fef08a] border-transparent'"
+                class="px-3 py-1.5 rounded-md transition-colors border">官方发布</button>
+              <button @click="activeFilters.type='pro'"
+                :class="activeFilters.type==='pro'?'bg-[#bfdbfe] text-[#1e40af] font-medium border-[#bfdbfe]':'bg-[#dbeafe] text-[#1e40af] hover:bg-[#bfdbfe] border-transparent'"
+                class="px-3 py-1.5 rounded-md transition-colors border">认证开发者</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <h2 class="text-xl font-bold text-gray-900">Soul × 技能包 精选专区</h2>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button @click="activeCategory='all'"
+            :class="activeCategory==='all'?'bg-black text-white':'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 rounded-full font-medium transition-colors">全部</button>
+          <button @click="activeCategory='dev'"
+            :class="activeCategory==='dev'?'bg-black text-white':'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 rounded-full font-medium transition-colors">开发工程</button>
+          <button @click="activeCategory='mkt'"
+            :class="activeCategory==='mkt'?'bg-black text-white':'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 rounded-full font-medium transition-colors">产品与运营</button>
+          <button @click="activeCategory='fin'"
+            :class="activeCategory==='fin'?'bg-black text-white':'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 rounded-full font-medium transition-colors">数据金融</button>
+          <button @click="activeCategory='law'"
+            :class="activeCategory==='law'?'bg-black text-white':'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+            class="px-3 py-1.5 rounded-full font-medium transition-colors">法律合规</button>
+        </div>
+      </div>
+      <!-- Official bundles -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-4">
+          <i data-lucide="shield-check" class="w-4 h-4 text-amber-500"></i>
+          <h3 class="font-bold text-gray-800">官方精选捆绑包</h3>
+          <span class="text-xs text-gray-400">100% 鉴权就绪 · 一键部署 · 官方保障</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" x-show="filteredOfficial.length > 0">
+          <template x-for="key in filteredOfficial" :key="key">
+            <div class="card p-5 cursor-pointer" @click="openDetail(key)">
+              <div class="flex items-start justify-between mb-3">
+                <div
+                  :class="'w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ' + bundles[key].bgClass + ' ' + bundles[key].textClass"
+                  x-text="bundles[key].icon"></div><span class="badge-official">Tencent Certified</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-1" x-text="bundles[key].name"></h4>
+              <p class="text-xs text-gray-500 mb-3" x-text="bundles[key].desc"></p>
+              <div class="flex flex-wrap gap-1 mb-3"><template x-for="tag in bundles[key].tags.slice(0,3)"><span
+                    class="skill-tag" x-text="tag"></span></template></div>
+              <div class="flex items-center justify-between text-xs text-gray-400"><span
+                  x-text="'⬇ ' + bundles[key].installs"></span><span class="text-green-600 font-medium">✅ 98% 成功率</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- Community bundles -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <i data-lucide="users" class="w-4 h-4 text-blue-500"></i>
+          <h3 class="font-bold text-gray-800">社区高分达人包</h3>
+          <span class="text-xs text-gray-400">社区精选 · 多维评分 · Fork 自定义</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" x-show="filteredCommunity.length > 0">
+          <template x-for="key in filteredCommunity" :key="key">
+            <div class="card p-5 cursor-pointer" @click="openDetail(key)">
+              <div class="flex items-start justify-between mb-3">
+                <div
+                  :class="'w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ' + bundles[key].bgClass + ' ' + bundles[key].textClass"
+                  x-text="bundles[key].icon"></div><span class="badge-pro">Community Pro</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-1" x-text="bundles[key].name"></h4>
+              <p class="text-xs text-gray-500 mb-3" x-text="bundles[key].desc"></p>
+              <div class="flex flex-wrap gap-1 mb-3"><template x-for="tag in bundles[key].tags.slice(0,3)"><span
+                    class="skill-tag" x-text="tag"></span></template></div>
+              <div class="flex items-center justify-between text-xs text-gray-400"><span
+                  x-text="'⬇ ' + bundles[key].installs"></span><span class="text-blue-600 font-medium">95% 成功率</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCENE DETAIL ===== -->
+    <div x-show="currentView==='detail'" x-cloak>
+      <button @click="currentView='list'"
+        class="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-black transition-colors font-medium">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> 返回探索专家包
+      </button>
+
+      <!-- Bundle Header & Installation -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8 flex flex-col md:flex-row gap-8">
+        <div class="flex-1">
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              :class="'w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl ' + (bundles[selectedBundle]?.bgClass || '') + ' ' + (bundles[selectedBundle]?.textClass || '')"
+              x-text="bundles[selectedBundle]?.icon"></div>
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900" x-text="bundles[selectedBundle]?.name"></h2>
+              <div class="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <span :class="bundles[selectedBundle]?.author.includes('Tencent')?'badge-official':'badge-pro'"
+                  x-text="bundles[selectedBundle]?.author"></span>
+                <span>·</span>
+                <span x-text="'⬇ ' + bundles[selectedBundle]?.installs + ' 次安装'"></span>
+              </div>
+            </div>
+          </div>
+          <div class="text-gray-600 mb-5 text-sm leading-relaxed" x-text="bundles[selectedBundle]?.desc"></div>
+
+          <div class="mb-8">
+            <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-1.5"><i data-lucide="check-circle-2"
+                class="w-4 h-4 text-green-500"></i> 它可以帮你做什么？</h4>
+            <ul class="space-y-2.5">
+              <template x-for="feature in bundles[selectedBundle]?.features" :key="feature">
+                <li class="flex items-start gap-2.5 text-sm text-gray-800">
+                  <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span x-text="feature"></span>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-1.5"><i data-lucide="wrench"
+                class="w-4 h-4 text-blue-500"></i> 此技能包内含的底层 Tools</h4>
+            <div class="flex flex-wrap gap-2">
+              <template x-for="tag in bundles[selectedBundle]?.tags" :key="tag">
+                <span class="skill-tag border-blue-100 bg-blue-50/50 text-blue-700 font-medium" x-text="tag"></span>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="w-full md:w-80 bg-gray-50 rounded-xl p-6 border border-gray-100 flex flex-col justify-center">
+          <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-1.5"><i data-lucide="download-cloud"
+              class="w-4 h-4 text-gray-500"></i> 获取与安装</h4>
+          <div class="space-y-3">
+            <button
+              class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors">
+              <i data-lucide="message-square" class="w-4 h-4"></i> 在工作台对话中安装 (推荐)
+            </button>
+            <div class="relative">
+              <div class="text-[10px] text-gray-500 font-bold mb-1">命令行安装 (CLI)</div>
+              <div class="bg-gray-900 text-gray-300 font-mono text-xs p-2 rounded-lg flex items-center justify-between">
+                <span x-text="'soul pkg install ' + selectedBundle"></span>
+                <i data-lucide="copy" class="w-3 h-3 text-gray-500 hover:text-white cursor-pointer"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOULCRAFT SECTION -->
+      <div class="mb-10 mt-12">
+        <div class="mb-6 flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+            <i data-lucide="settings-2" class="w-5 h-5"></i></div>
+          <div>
+            <h2 class="text-xl font-extrabold text-gray-900">定制专属 Soul <span
+                class="text-sm font-medium text-gray-400 ml-2 font-normal">(可选)</span></h2>
+            <p class="text-sm text-gray-500 mt-1.5">您可以基于此技能包的基础模板，拖动参数旋钮定制专属的 Soul 人格，右侧将实时同步预览底层的 <code
+                class="bg-gray-100 px-1.5 py-0.5 rounded text-xs text-gray-600">SOUL.md</code> 配置文件。</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row"
+          style="min-height:480px">
+          <div class="w-full md:w-2/5 border-r border-gray-100 bg-gray-50/60 p-5 flex flex-col gap-4 overflow-y-auto">
+            <div>
+              <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">基础模板</label>
+              <div
+                class="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 font-medium flex items-center gap-2">
+                <i data-lucide="lock" class="w-3 h-3"></i> <span x-text="bundles[selectedBundle]?.name"></span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">Agent 名称</label>
+              <input type="text" x-model="agentName" placeholder="如: Eric's Architect"
+                class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100" />
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 space-y-4">
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span
+                    class="font-semibold text-gray-700">沟通基调</span><span class="text-gray-400"
+                    x-text="tone>70?'极度严谨':tone>30?'专业友好':'幽默活泼'"></span></div>
+                <input type="range" min="0" max="100" x-model="tone" class="w-full accent-blue-600" />
+                <div class="flex justify-between text-[10px] text-gray-400"><span>🎉 幽默</span><span>🧊 严谨</span></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span
+                    class="font-semibold text-gray-700">护栏严格度</span><span class="text-gray-400"
+                    x-text="strictness>80?'硬性拦截':strictness>50?'强烈建议':'灵活'"></span></div>
+                <input type="range" min="0" max="100" x-model="strictness" class="w-full accent-red-500" />
+                <div class="flex justify-between text-[10px] text-gray-400"><span>💬 宽松</span><span>🚫 强制</span></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1"><span
+                    class="font-semibold text-gray-700">自主执行权限</span><span class="text-gray-400"
+                    x-text="autonomy>60?'高度自主':'需人工确认'"></span></div>
+                <input type="range" min="0" max="100" x-model="autonomy" class="w-full accent-purple-500" />
+                <div class="flex justify-between text-[10px] text-gray-400"><span>🙋 人工审批</span><span>🤖 全自主</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">注入技能树</label>
+              <div class="bg-white p-3 rounded-xl border border-gray-100 space-y-2">
+                <template x-for="sk in skillOptions" :key="sk.id">
+                  <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" :checked="sk.locked||selectedSkills.includes(sk.id)"
+                      @change="toggleSkill(sk.id)" :disabled="sk.locked" class="rounded accent-blue-600" />
+                    <span x-text="sk.name"></span>
+                    <span x-show="sk.locked" class="text-[10px] text-gray-400">(必需)</span>
+                  </label>
+                </template>
+              </div>
+            </div>
+            <button
+              class="w-full bg-gray-900 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 flex items-center justify-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i> 保存为我的专属 Soul
+            </button>
+          </div>
+          <div class="w-full md:w-3/5 bg-[#1a1b26] text-gray-300 flex flex-col font-mono text-xs">
+            <div class="flex items-center bg-[#24253a] px-4 py-2.5 border-b border-[#35364f] gap-2">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+              </div>
+              <span class="text-gray-400 text-xs">SOUL.md — 实时预览</span>
+              <span class="ml-auto text-green-400 text-[10px]">● 实时生成</span>
+            </div>
+            <div class="flex-1 p-5 overflow-y-auto">
+              <pre class="text-[11px] whitespace-pre-wrap leading-relaxed"><code><span class="text-purple-400">---</span>
+<span class="text-blue-400">identity:</span>
+  <span class="text-cyan-400">name:</span>    <span class="text-yellow-300" x-text="agentName||'未命名 Agent'"></span>
+  <span class="text-cyan-400">role:</span>    <span class="text-green-300" x-text="bundleRole"></span>
+  <span class="text-cyan-400">vibe:</span>    <span class="text-orange-300" x-text="vibeText"></span>
+
+<span class="text-blue-400">security:</span>
+  <span class="text-cyan-400">guardrail:</span> <span class="text-red-400" x-text="strictness>80?'STRICT':strictness>50?'MODERATE':'LENIENT'"></span>
+  <span class="text-cyan-400">autonomy:</span>  <span class="text-purple-300" x-text="autonomy>60?'DAEMON_AUTO':'HUMAN_IN_LOOP'"></span>
+
+<span class="text-blue-400">rules:</span>
+<span class="text-green-300" x-text="rulesText"></span>
+
+<span class="text-blue-400">equipped_skills:</span>
+<span class="text-green-300" x-text="equippedSkillsText"></span>
+<span class="text-purple-400">---</span></code></pre>
+            </div>
+            <div class="px-5 py-2 bg-[#1e1f2e] border-t border-[#35364f] text-[10px] text-gray-500">
+              调整参数后，此文件将同步写入 Lighthouse 实例 <code class="text-blue-300">~/.soul/SOUL.md</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- SANDBOX SECTION -->
+        <div class="mb-10 mt-12">
+          <div class="mb-6 flex items-start gap-3">
+            <div
+              class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="terminal" class="w-5 h-5"></i></div>
+            <div>
+              <h2 class="text-xl font-extrabold text-gray-900">Try-before-buy 沙箱演练</h2>
+              <p class="text-sm text-gray-500 mt-1.5">模拟该 Agent 在沙箱环境中的多轮协同工作流：意图规划 → 任务拆解与下发 → 工具链调用 → 返回结果与 DAG 轨迹追溯。
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <!-- Left: chat input + log -->
+            <div class="lg:col-span-2 bg-[#1a1b26] rounded-2xl border border-gray-700 flex flex-col"
+              style="min-height:520px">
+              <div class="flex items-center bg-[#24253a] px-4 py-2.5 rounded-t-2xl border-b border-[#35364f] gap-2">
+                <div class="flex gap-1.5">
+                  <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                  <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+                <span class="text-gray-400 text-xs font-mono">沙箱终端 — 全栈架构师 v2.1</span>
+                <div class="ml-auto flex items-center gap-3">
+                  <span
+                    class="text-blue-400 text-[10px] font-mono bg-blue-900/30 px-2 py-0.5 rounded border border-blue-800/50">试用次数:
+                    <span x-text="3 - trialCount">3</span>/3</span>
+                  <span x-show="sandboxRunning" class="text-yellow-400 text-[10px] font-mono animate-pulse">●
+                    执行中…</span>
+                  <span x-show="!sandboxRunning && sandboxLines.length" class="text-green-400 text-[10px] font-mono">●
+                    已完成</span>
+                  <button @click="resetSandbox()"
+                    class="text-xs text-gray-500 hover:text-gray-300 border border-gray-600 px-2 py-0.5 rounded">重置</button>
+                </div>
+              </div>
+              <!-- Log output -->
+              <div class="flex-1 p-4 overflow-y-auto font-mono text-xs leading-relaxed" id="sandbox-log">
+                <template x-for="(line, i) in sandboxLines" :key="i">
+                  <div class="terminal-line mb-0.5" :style="'animation-delay:' + (i*0.05) + 's'">
+                    <span :class="line.cls" x-text="line.text"></span>
+                  </div>
+                </template>
+                <div x-show="!sandboxLines.length" class="text-gray-600 text-center mt-20">
+                  <div class="text-4xl mb-3">🤖</div>
+                  <div class="text-sm">选择一个预设场景，点击「开始演练」观看 Agent 工作流程</div>
+                </div>
+              </div>
+              <!-- User input bar -->
+              <div class="border-t border-[#35364f] p-3 flex gap-2">
+                <input x-model="sandboxInput" @keydown.enter="submitSandbox()" type="text"
+                  placeholder="向 Agent 提问，或选择下方预设场景…"
+                  class="flex-1 bg-[#24253a] text-gray-200 text-xs px-3 py-2 rounded-lg outline-none border border-[#35364f] focus:border-blue-500 font-mono" />
+                <button @click="submitSandbox()" :disabled="sandboxRunning"
+                  class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700 disabled:opacity-50">发送</button>
+              </div>
+            </div>
+            <!-- Right: preset scenarios + DAG trace -->
+            <div class="flex flex-col gap-4">
+              <!-- Preset scenarios -->
+              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+                <h3 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-1.5"><i data-lucide="zap"
+                    class="w-4 h-4 text-yellow-500"></i> 预设演练场景</h3>
+                <div class="space-y-2">
+                  <template x-for="s in presets" :key="s.id">
+                    <button @click="runPreset(s.id)" :disabled="sandboxRunning"
+                      class="w-full text-left p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-xs disabled:opacity-50">
+                      <div class="font-semibold text-gray-800 mb-0.5" x-text="s.label"></div>
+                      <div class="text-gray-500" x-text="s.desc"></div>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <!-- DAG Trace -->
+              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex-1">
+                <h3 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-1.5"><i data-lucide="activity"
+                    class="w-4 h-4 text-purple-500"></i> DAG 执行轨迹</h3>
+                <div class="space-y-2">
+                  <template x-for="(node, idx) in dagNodes" :key="idx">
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="flex-shrink-0 w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center"
+                        :class="node.status==='done'?'bg-green-100 text-green-700':node.status==='running'?'bg-yellow-100 text-yellow-700 animate-pulse':'bg-gray-100 text-gray-400'">
+                        <span x-text="node.status==='done'?'✓':node.status==='running'?'…':idx+1"></span>
+                      </div>
+                      <div class="flex-1">
+                        <div class="text-xs font-medium text-gray-800" x-text="node.name"></div>
+                        <div class="text-[10px] text-gray-400" x-text="node.tool"></div>
+                      </div>
+                      <div class="text-[10px] font-mono"
+                        :class="node.status==='done'?'text-green-500':node.status==='running'?'text-yellow-500 animate-pulse':'text-gray-300'"
+                        x-text="node.ms||''"></div>
+                    </div>
+                    <div x-show="idx < dagNodes.length-1" class="ml-3 border-l-2 border-dashed border-gray-200 h-2">
+                    </div>
+                  </template>
+                  <div x-show="!dagNodes.length" class="text-xs text-gray-400 text-center py-4">运行演练后，执行轨迹将在此显示</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-gray-200 mt-8">
+    <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-6">
+      <div>
+        <div class="flex items-center mb-3">
+          <img src="logo.png" alt="SkillHub" class="h-7 object-contain" />
+        </div>
+        <p class="text-sm text-gray-400 max-w-xs">专为中国用户优化的 AI Skills 社区，Soul × 技能包专区让每位开发者快速构建强大 Agent。</p>
+      </div>
+      <div class="flex gap-12 text-sm text-gray-500">
+        <div>
+          <h4 class="font-bold text-gray-700 mb-3">快捷入口</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-black">公告列表</a></li>
+            <li><a href="#" class="hover:text-black">服务协议</a></li>
+            <li><a href="#" class="hover:text-black">建议反馈</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-700 mb-3">Soul 专区</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-black">上架指南</a></li>
+            <li><a href="#" class="hover:text-black">开发者文档</a></li>
+            <li><a href="#" class="hover:text-black">收益规则</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-gray-100 text-xs text-gray-400 text-center py-4">Copyright © 2026 SkillHub · 腾讯云旗下产品 ·
+      Soul × 技能包专区 演示 Demo</div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    function app() {
+      return {
+        currentView: 'list', activeCategory: 'all', showFilters: false,
+        activeFilters: { scenario: '', task: '', role: '', type: '' },
+        tone: 85, strictness: 90, autonomy: 40,
+        selectedBundle: 'architect', agentName: '',
+        officialList: ['devops', 'architect', 'qa', 'pm', 'sec', 'dba'],
+        communityList: ['quant', 'mkt', 'law', 'csr', 'hr', 'design'],
+        get filteredOfficial() {
+          if (this.activeCategory === 'all') return ['devops', 'architect', 'qa', 'pm'];
+          return this.officialList.filter(k => this.bundles[k].category === this.activeCategory);
+        },
+        get filteredCommunity() {
+          if (this.activeCategory === 'all') return ['quant', 'mkt', 'law', 'csr'];
+          return this.communityList.filter(k => this.bundles[k].category === this.activeCategory);
+        },
+        bundles: {
+          devops: { name: '全自动 DevOps 工程师', category: 'dev', role: 'DevOps 自动化运维专家', icon: 'Ops', bgClass: 'bg-indigo-50', textClass: 'text-indigo-600', desc: '7×24 自主运维专家。负责 CI/CD 流水线、Lighthouse 云资源管理、报警根因分析一体化。', installs: '15.4万', author: 'Tencent Certified', tags: ['GitLab CI', 'Docker', 'K8s', 'Lighthouse API', 'Alert Analyzer'], features: ['7×24小时全天候值守报警系统', '自动抓取堆栈分析报错根因并给出修复建议', '根据架构需求自主编写及维护部署脚本'] },
+          architect: { name: '全栈架构师 (Node/React)', category: 'dev', role: '高级全栈开发工程师与代码审查员', icon: 'Arc', bgClass: 'bg-purple-50', textClass: 'text-purple-600', desc: '严苛的高级工程师。可自动审查 PR、定位性能瓶颈、输出可执行的重构建议。', installs: '9.2万', author: 'Tencent Certified', tags: ['GitHub PR Review', 'TS/React', 'AST Parser', 'Profiler', 'Lint Guard'], features: ['深入审查复杂 PR 并防范内存泄漏', '从全局视角定位隐藏的性能与并发瓶颈', '分析遗留系统并生成符合规范的架构重构方案'] },
+          qa: { name: 'AI 自动化测试工程师', category: 'dev', role: '高级自动化测试专家', icon: 'QA', bgClass: 'bg-cyan-50', textClass: 'text-cyan-600', desc: '精通 E2E 测试策略的测试专家，自动生成测试用例，与 CI 集成输出覆盖率报告。', installs: '6.1万', author: 'Tencent Certified', tags: ['Playwright', 'Jest', 'Test Case Gen', 'Coverage Report'], features: ['根据产品需求 PRD 自动生成覆盖边缘用例的测试脚本', '对接 CI/CD 流水线，自动拦截不符合质量标准的代码提交', '聚合多维度测试数据，生成可视化的测试覆盖率与稳定性报告'] },
+          pm: { name: 'AI 增长产品经理', category: 'mkt', role: 'AI 增长产品经理', icon: 'PM', bgClass: 'bg-orange-50', textClass: 'text-orange-600', desc: '基于真实数据自动生成 A/B 测试方案及需求文档，跟踪转化漏斗并提出增长建议。', installs: '8.8万', author: 'Tencent Certified', tags: ['Data Analytics', 'PRD Gen', 'Figma API'], features: ['通过数据探针持续追踪并分析用户转化漏斗', '发现数据异动，自动构思并设计 A/B 测试实验组', '根据设定的业务 KPI，快速输出可交付的详细需求文档 (PRD)'] },
+          sec: { name: '渗透测试工程师', category: 'dev', role: '高级安全渗透专家', icon: 'Sec', bgClass: 'bg-red-50', textClass: 'text-red-600', desc: '白帽子安全专家。模拟黑客攻击，发现系统漏洞并输出修复建议。', installs: '4.2万', author: 'Tencent Certified', tags: ['OWASP Scanner', 'SQLMap', 'Report Gen'], features: ['自动化的系统及 API 渗透漏洞扫描', '黑盒与白盒结合的代码级安全审计', '一键输出符合等保 2.0 标准的安全修复报告'] },
+          dba: { name: '云原生 DBA', category: 'dev', role: '数据库架构专家', icon: 'DBA', bgClass: 'bg-blue-50', textClass: 'text-blue-600', desc: '数据库性能调优专家。诊断慢查询、提供分库分表与高可用架构方案。', installs: '7.1万', author: 'Tencent Certified', tags: ['Slow Query Analyzer', 'MySQL/PostgreSQL', 'Redis Cluster'], features: ['实时诊断并调优线上慢查询语句', '自动生成并验证分库分表扩容方案', '监控数据库连接池健康状况'] },
+          quant: { name: '量化金融分析师', category: 'fin', role: '量化金融数据研究员', icon: 'Fin', bgClass: 'bg-emerald-50', textClass: 'text-emerald-600', desc: '专注 A 股与加密数据。实时行情 API、Python 沙盒执行、K 线图表绘制一键输出。', installs: '2.1万', author: 'Community Pro', tags: ['Python', 'AKShare', 'Vega-Lite Chart', 'Backtest Engine'], features: ['对接多种金融行情接口获取高频及低频交易数据', '在沙箱中一键回测你的量化策略并输出详细的胜率及回撤报告', '使用 Vega-Lite 或 Matplotlib 自动绘制专业的 K线与动量图表'] },
+          mkt: { name: '小红书爆款内容矩阵', category: 'mkt', role: '新媒体运营专家', icon: 'Mkt', bgClass: 'bg-pink-50', textClass: 'text-pink-600', desc: '网感极佳的运营专家。抓取热点、生成 emoji 排版笔记、配图建议、数据复盘。', installs: '4.5万', author: 'Community Pro', tags: ['Web Scraper', 'Image Gen', 'SEO Writing', 'Trend Monitor', 'Analytics'], features: ['实时全网爬取相关赛道的最新平台热点与对标爆款', '基于特定平台的调性，自动生成极具网感的营销文案及 Emoji 排版', '批量监控并自动化复盘已发布内容的数据表现及受众画像'] },
+          law: { name: '法律合规顾问', category: 'law', role: '高级企业法务顾问', icon: 'Law', bgClass: 'bg-amber-50', textClass: 'text-amber-600', desc: '严谨的企业合规助手。精通合同条款解读、风险扫描、修改建议，支持多格式文档。', installs: '1.9万', author: 'Community Pro', tags: ['Contract Parser', 'Risk Scanner', 'Law DB Search', 'Doc OCR'], features: ['深度扫描冗长商业合同并高亮标出隐蔽的风险及霸王条款', '结合最新法律法规，提出专业的合规修改建议及免责声明', '支持 PDF/图像等格式解析，快速构建企业内部的专属法务知识库'] },
+          csr: { name: '跨境电商多语言客服', category: 'mkt', role: '多语言跨境客服专家', icon: 'CSR', bgClass: 'bg-teal-50', textClass: 'text-teal-600', desc: '支持 15 种语言的专家。对接 Shopify 订单库，处理退换货、物流查询等全流程售后。', installs: '3.3万', author: 'Community Pro', tags: ['Shopify API', 'Track17', 'Refund Gen'], features: ['无缝对接 Shopify 及其他主流电商平台订单流', '支持 15+ 语种的精准情绪识别、安抚及高情商工单回复', '针对退换货及丢件纠纷，全自动生成安抚方案并处理退款流程'] },
+          hr: { name: 'AI 招聘面试官', category: 'mkt', role: '资深 HRBP', icon: 'HR', bgClass: 'bg-rose-50', textClass: 'text-rose-600', desc: '全能 HR 助手。自动筛选海量简历，生成面试题库，甚至支持初面聊天机器人。', installs: '2.5万', author: 'Community Pro', tags: ['Resume Parser', 'Interview Chatbot', 'JD Gen'], features: ['批量解析多格式简历并精准提取候选人画像', '根据岗位要求自动生成千人千面的面试题库', '可挂载至企微提供全天候初级候选人答疑服务'] },
+          design: { name: 'UI/UX 设计走查', category: 'dev', role: '资深体验设计师', icon: 'UI', bgClass: 'bg-fuchsia-50', textClass: 'text-fuchsia-600', desc: '设计规范守护者。读取 Figma 设计稿，检查前端还原度及交互合理性。', installs: '1.8万', author: 'Community Pro', tags: ['Figma API', 'Image Diff', 'WCAG Checker'], features: ['自动对比前端截图与设计原稿，高亮像素级差异', '检查色板、字号等设计规范在代码中的落地情况', '检测并报告页面是否符合 WCAG 无障碍访问标准'] }
+        },
+        openDetail(id) {
+          this.selectedBundle = id;
+          this.currentView = 'detail';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        selectedSkills: ['pr-review', 'profiler'],
+        sandboxLines: [], sandboxRunning: false, sandboxInput: '', trialCount: 0,
+        dagNodes: [],
+        skillOptions: [
+          { id: 'pr-review', name: 'GitHub PR 审查助手', locked: true },
+          { id: 'profiler', name: '代码性能分析器', locked: true },
+          { id: 'ast', name: 'AST 语法解析器', locked: false },
+          { id: 'deploy', name: '云部署脚本生成', locked: false },
+          { id: 'lint', name: 'Lint 规则守卫', locked: false },
+          { id: 'doc-gen', name: 'API 文档生成器', locked: false },
+        ],
+        presets: [
+          { id: 'pr', label: '📋 场景1: 审查 Pull Request', desc: '分析 PR 差异，识别性能问题' },
+          { id: 'perf', label: '⚡ 场景2: 定位性能瓶颈', desc: 'Profiler 执行并生成优化建议' },
+          { id: 'doc', label: '📖 场景3: 生成 API 文档', desc: '扫描代码库自动生成接口说明' },
+        ],
+        get bundleRole() {
+          return this.bundles[this.selectedBundle]?.role || 'AI 协同专家';
+        },
+        get vibeText() {
+          return this.tone > 70 ? '极其严谨，不苟言笑，只谈代码质量' : this.tone > 30 ? '专业且友好，适当给出优化建议' : '活泼幽默，善用表情符号 🚀';
+        },
+        get rulesText() {
+          const g = this.strictness > 80 ? '【硬性拦截】绝不允许绕过安全护栏' : this.strictness > 50 ? '【强烈建议】尽量保持在专业域内' : '【灵活模式】可适当发挥';
+          return `  - 重点关注性能瓶颈、内存泄漏和竞态条件\n  - 强制执行 TypeScript 类型安全规范\n  - ${g}`;
+        },
+        get equippedSkillsText() {
+          const locked = this.skillOptions.filter(s => s.locked).map(s => `  - ${s.id}`);
+          const chosen = this.selectedSkills.filter(id => !this.skillOptions.find(s => s.id === id)?.locked).map(id => `  - ${id}`);
+          return [...locked, ...chosen].join('\n');
+        },
+        toggleSkill(id) {
+          const idx = this.selectedSkills.indexOf(id);
+          if (idx >= 0) this.selectedSkills.splice(idx, 1); else this.selectedSkills.push(id);
+        },
+        startSandbox() { if (!this.sandboxLines.length) this.runPreset('pr'); },
+        resetSandbox() { this.sandboxLines = []; this.dagNodes = []; this.sandboxRunning = false; this.trialCount = 0; },
+        submitSandbox() {
+          if (!this.sandboxInput.trim() || this.sandboxRunning) return;
+          if (this.trialCount >= 3) { alert('您的 Try-before-buy 试用额度已用完，请部署或购买该包。'); return; }
+          this.trialCount++;
+          const q = this.sandboxInput; this.sandboxInput = '';
+          this.sandboxLines.push({ cls: 'sandbox-user', text: '> 提问: ' + q });
+          this.sandboxRunning = true;
+          this._simulateRun([
+            { cls: 'sandbox-sys', text: '[Soul: 规划者] 正在分析意图并拆解多 Agent 任务流…', delay: 600 },
+            { cls: 'sandbox-sys', text: '[Supervisor] 下发子任务至 -> 研究员 Agent', delay: 1000 },
+            { cls: 'sandbox-tool', text: '[Tool: WebSearch] 🔍 检索相关信息…', delay: 1500 },
+            { cls: 'sandbox-sys', text: '[Supervisor] 下发子任务至 -> 编码员 Agent', delay: 2000 },
+            { cls: 'sandbox-tool', text: '[Tool: CodeGen] 💻 生成代码并调用 lint 检查…', delay: 2600 },
+            { cls: 'sandbox-agent', text: '[Agent: 汇总] ✅ 任务完成，已输出带注释的修正代码。', delay: 3400 },
+          ], [
+            { name: '意图分析(规划者)', tool: 'supervisor-agent', ms: '120ms' },
+            { name: '检索(研究员)', tool: 'web-search', ms: '400ms' },
+            { name: '开发(编码员)', tool: 'code-generator', ms: '800ms' },
+            { name: '合并输出', tool: 'response-builder', ms: '150ms' },
+          ]);
+        },
+        runPreset(id) {
+          this.resetSandbox();
+          this.trialCount = 1;
+          const scripts = {
+            pr: [
+              { cls: 'sandbox-user', text: '> 提问: 帮我审查最近的 PR#142，找出可能的性能问题', delay: 0 },
+              { cls: 'sandbox-sys', text: '[Soul: 规划者] 载入 SOUL.md -> guardrail: STRICT | autonomy: HUMAN_IN_LOOP', delay: 500 },
+              { cls: 'sandbox-sys', text: '[Supervisor] 编排多 Agent 工作流：Reviewer -> Profiler', delay: 1000 },
+              { cls: 'sandbox-tool', text: '[Tool: github-pr-reviewer] ⬇️ 拉取 PR#142 Diff...', delay: 1600 },
+              { cls: 'sandbox-sys', text: '[Agent: Reviewer] 发现 4 个文件变更，准备进行 AST 分析', delay: 2100 },
+              { cls: 'sandbox-tool', text: '[Tool: ast-parser] 🔍 解析 src/components/DataGrid.tsx AST 结构...', delay: 2600 },
+              { cls: 'sandbox-sys', text: '[Agent: Profiler] 接管任务 -> 静态扫描复杂度...', delay: 3200 },
+              { cls: 'sandbox-agent', text: '[Agent: 汇总] 🚨 警告: src/components/DataGrid.tsx 第 85 行存在 O(n²) 嵌套循环。', delay: 3800 },
+              { cls: 'sandbox-agent', text: '[Agent: 汇总] 💡 建议: 使用 Map 结构替换，可提升渲染性能约 400%。', delay: 4300 },
+              { cls: 'sandbox-sys', text: '[系统遥测] ✅ 成功率 100% | 耗时 4.3s | 消耗 Token: 1,420', delay: 4800 },
+            ],
+            perf: [
+              { cls: 'sandbox-user', text: '> 用户: 分析 API 接口的性能瓶颈', delay: 0 },
+              { cls: 'sandbox-sys', text: '[Soul] 识别场景 → 性能分析模式', delay: 500 },
+              { cls: 'sandbox-tool', text: '[Tool: profiler] 挂载 CPU 采样分析器…', delay: 1200 },
+              { cls: 'sandbox-tool', text: '[Tool: profiler] 执行 1000 次请求基准测试…', delay: 2000 },
+              { cls: 'sandbox-agent', text: '[Agent] P99 延迟: 1240ms，瓶颈在 DB 查询（无索引）', delay: 3200 },
+              { cls: 'sandbox-agent', text: '[Agent] 🔧 建议在 user_id 字段添加复合索引，预计优化 80%', delay: 3900 },
+              { cls: 'sandbox-sys', text: '[Soul] 本轮调用: 1 tool · 耗时 3.9s · 成功率 100%', delay: 4600 },
+            ],
+            doc: [
+              { cls: 'sandbox-user', text: '> 用户: 为 /api/v2/ 下的所有接口生成文档', delay: 0 },
+              { cls: 'sandbox-sys', text: '[Soul] 规划任务 → 文档生成模式', delay: 500 },
+              { cls: 'sandbox-tool', text: '[Tool: ast-parser] 扫描路由文件…', delay: 1100 },
+              { cls: 'sandbox-tool', text: '[Tool: doc-generator] 提取参数类型 & JSDoc 注释…', delay: 2000 },
+              { cls: 'sandbox-agent', text: '[Agent] ✅ 生成 OpenAPI 3.0 文档，共 24 个端点', delay: 3100 },
+              { cls: 'sandbox-tool', text: '[Tool: doc-generator] 导出 Markdown & HTML 格式…', delay: 3700 },
+              { cls: 'sandbox-sys', text: '[Soul] 本轮调用: 2 tools · 耗时 3.7s · 成功率 100%', delay: 4400 },
+            ]
+          };
+          const dagMap = {
+            pr: [{ name: 'Supervisor 规划', tool: 'supervisor-agent' }, { name: 'PR Diff 拉取', tool: 'github-pr-reviewer' }, { name: 'AST 解析', tool: 'ast-parser' }, { name: '性能分析', tool: 'profiler' }, { name: '结果汇总', tool: 'response-builder' }],
+            perf: [{ name: 'Supervisor 规划', tool: 'supervisor-agent' }, { name: 'CPU 采样', tool: 'profiler' }, { name: '基准测试', tool: 'benchmark-runner' }, { name: '报告生成', tool: 'response-builder' }],
+            doc: [{ name: 'Supervisor 规划', tool: 'supervisor-agent' }, { name: '路由扫描', tool: 'ast-parser' }, { name: '文档生成', tool: 'doc-generator' }, { name: '格式导出', tool: 'response-builder' }],
+          };
+          this._simulateRun(scripts[id], dagMap[id]);
+        },
+        _simulateRun(lines, dag) {
+          this.sandboxRunning = true;
+          this.dagNodes = dag.map(n => ({ ...n, status: 'pending', ms: '' }));
+          let dagIdx = 0;
+          lines.forEach((line, i) => {
+            setTimeout(() => {
+              this.sandboxLines.push(line);
+              if (dagIdx < this.dagNodes.length) {
+                if (dagIdx > 0) this.dagNodes[dagIdx - 1].status = 'done', this.dagNodes[dagIdx - 1].ms = (Math.floor(Math.random() * 1800) + 200) + 'ms';
+                this.dagNodes[dagIdx].status = 'running'; dagIdx++;
+              }
+              if (i === lines.length - 1) {
+                setTimeout(() => {
+                  this.dagNodes.forEach((n, j) => { n.status = 'done'; if (!n.ms) n.ms = (Math.floor(Math.random() * 1500) + 100) + 'ms'; });
+                  this.sandboxRunning = false;
+                }, 600);
+              }
+              const el = document.getElementById('sandbox-log');
+              if (el) el.scrollTop = el.scrollHeight;
+            }, line.delay || 0);
+          });
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
