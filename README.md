@@ -1,6 +1,7 @@
 # Soul × 技能包专区 (SkillHub Soul Demo)
 
 本项目是基于腾讯云 AI Skills 社区平台设计的 Soul × 技能包专区 交互原型演示。
+查看Demo：https://skillhub-module-b-liminglin.vercel.app/
 
 ##  设计思路 (Design Thinking)
 
@@ -73,4 +74,4 @@ AI 产品的核心痛点之一是执行逻辑的“黑盒化”。我在详情�
 由于本项目为原生 HTML + 引入 CDN 资源开发，无任何复杂的构建步骤。
 
 1. **环境要求**：任何现代浏览器（Chrome/Edge/Safari）。
-2. **运行方式**：直接双击打开目录下的 `index.html` 即可完整体验上述所有交互与动画。
+2. **运行方式**：点击链接https://skillhub-module-b-liminglin.vercel.app/ 或直接双击打开目录下的 `index.html` 即可完整体验上述所有交互与动画。
